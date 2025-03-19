@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Taipei Map</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.15.0/mapbox-gl.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.15.0/mapbox-gl.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+        .mapboxgl-popup {
+            max-width: 400px; 
+        }
+        .mapboxgl-popup-content {
+            padding: 15px;
+        }
+        .popup-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        .popup-description {
+            margin-bottom: 10px;
+        }
+        .popup-images {
+            display: flex;
+            gap: 8px;
+            flex-direction: column; 
+            margin-top: 10px;
+        }
+        .popup-images img {
+            width: 100%;
+            max-width: 360px; 
+            max-height: 240px; 
+            object-fit: cover; 
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiaWZvcm1haGVyIiwiYSI6ImNsaHBjcnAwNDF0OGkzbnBzZmUxM2Q2bXgifQ.fIyIgSwq1WWVk9CKlXRXiQ';
+        
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/satellite-streets-v12',
+            center: [121.5654, 25.1330], 
+            zoom: 10
+        });
+        
+        map.on('load', () => {
+            fetch('Taipei.geojson')
+                .then(response => response.json())
+                .then(data => {
+                    data.features.forEach(feature => {
+                        const name = feature.properties.Name || 'Unnamed Location';
+                        const description = feature.properties.Description || 'No description available';
+                        
+                        const popupContent = document.createElement('div');
+                        
+                        const titleElement = document.createElement('div');
+                        titleElement.className = 'popup-title';
+                        titleElement.textContent = name;
+                        popupContent.appendChild(titleElement);
+                    
+                        const descElement = document.createElement('div');
+                        descElement.className = 'popup-description';
+                        descElement.textContent = description;
+                        popupContent.appendChild(descElement);
+                        
+                        if (feature.properties.Pictures) {
+                            const picturesContainer = document.createElement('div');
+                            picturesContainer.className = 'popup-images';
+
+                            const picturesList = feature.properties.Pictures.split(',').map(pic => pic.trim());
+                            
+                            const imagesToShow = Math.min(picturesList.length, 2);
+                            
+                            for (let i = 0; i < imagesToShow; i++) {
+                                if (picturesList[i] && picturesList[i] !== 'null') {
+                                    const imgElement = document.createElement('img');
+                                    imgElement.src = `pictures/${picturesList[i]}.jpg`;
+                                    imgElement.alt = `Image of ${name}`;
+                                    imgElement.onerror = function() {
+                                        this.style.display = 'none';
+                                    };
+                                    picturesContainer.appendChild(imgElement);
+                                }
+                            }
+                            
+                            if (picturesContainer.children.length > 0) {
+                                popupContent.appendChild(picturesContainer);
+                            }
+                        }
+                        
+                        const marker = new mapboxgl.Marker()
+                            .setLngLat(feature.geometry.coordinates)
+                            .setPopup(new mapboxgl.Popup().setDOMContent(popupContent))
+                            .addTo(map);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading GeoJSON data:', error);
+                    alert('Failed to load map data. Check console for details.');
+                });
+        });
+    </script>
+</body>
+</html>
