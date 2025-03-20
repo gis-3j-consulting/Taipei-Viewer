@@ -67,6 +67,7 @@
                     data.features.forEach(feature => {
                         const name = feature.properties.Name || 'Unnamed Location';
                         const description = feature.properties.Description || 'No description available';
+                        const links = feature.properties.Link || 'No Links';
                         
                         const popupContent = document.createElement('div');
                         
@@ -79,6 +80,11 @@
                         descElement.className = 'popup-description';
                         descElement.textContent = description;
                         popupContent.appendChild(descElement);
+
+                        const linkElement = document.createElement('p');
+                        linkElement.className = 'popup-links';
+                        linkElement.innerHTML = links;
+                        popupContent.appendChild(linkElement);
                         
                         if (feature.properties.Pictures) {
                             const picturesContainer = document.createElement('div');
@@ -105,6 +111,7 @@
                             }
                         }
                         
+
                         const marker = new mapboxgl.Marker()
                             .setLngLat(feature.geometry.coordinates)
                             .setPopup(new mapboxgl.Popup().setDOMContent(popupContent))
